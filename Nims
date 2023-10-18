@@ -1,0 +1,231 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace Projektgrupp19_Nim
+{
+    class Program
+    {
+        //Variabler
+        static string spelare1, spelare2;
+        static int[] stickor = { 5, 5, 5 };
+        static int count = 0;
+
+        static void Main()
+        {
+           
+            GameBoard();
+            Console.WriteLine("Vil du spela igen, ja eller nej?");
+            string input = Console.ReadLine();
+            if (input == "ja")
+            {
+                GameBoard();
+            }
+            
+        }
+
+        static void GameBoard()
+        {
+
+            GameRules(); // Visa spelets regler
+            WhatsYourName(); // Fråga om spelarnas namn
+            StartSticks(stickor); // Visa startbrädet
+
+            if(!IsEmpty()) // Loopa tills brädet är tomt
+            {
+                WhosTurn(); // Bestäm vilkens tur det är och hantera deras drag
+            }
+            else
+                Console.WriteLine("Spelet är över! Spelare " + (count % 2 == 0 ? spelare1 : spelare2) + " vann!");
+
+
+
+
+        }
+
+        //spelreglerna!
+        static bool GameRules()
+        {
+            Console.WriteLine("Hej och välkommen till NIM! Ifall du vill starta spelet tryck ENTER");
+            ConsoleKeyInfo keyInfo = Console.ReadKey();
+
+            if (keyInfo.Key == ConsoleKey.Enter)
+            {
+                Console.WriteLine("Spelet har startat! Här kommer lite regler, tryck enter för att få fram nästa regel; ");
+                Console.ReadLine();
+                Console.WriteLine("Spelet börjar med att femton stickor delas upp i tre lika stora högar om fem");
+                Console.ReadLine();
+                Console.WriteLine("Därefter turas spelarna om att dra stickor från högarna, du får bara stickor från en hög åt gången. Du måste ta minst en sticka. ");
+                Console.ReadLine();
+                // en rad om hur man plockar stickor
+                Console.WriteLine("Spelaren som tar sista stickan vinner! Lycka till!");
+                return true;
+            }
+            else Console.WriteLine("/n Vi ses en annan gång");
+            return false;
+
+        }
+
+        //spelar informationen
+        static void WhatsYourName()
+        {
+
+            Console.WriteLine("1 eller 2 spelare? Skriv '1' eller '2'");
+            int.TryParse(Console.ReadLine(), out int total);
+
+            if (total < 1 || total > 2) // när spelaren inte ger 1 eller 2
+            {
+                Console.WriteLine("För många spelare");
+                WhatsYourName(); //kör koden igen
+            }
+
+
+
+            if (total == 1)
+            {
+                Console.WriteLine("Vad är ditt namn spelare ett?");
+                spelare1 = Console.ReadLine();
+                spelare2 = "AI";
+
+            }
+
+            if (total == 2)
+            {
+                Console.WriteLine("Vad är ditt namn spelare ett?");
+                spelare1 = Console.ReadLine();
+                Console.WriteLine("Vad är ditt namn spelare två?");
+                spelare2 = Console.ReadLine();
+            }
+
+
+
+
+
+
+
+        }
+
+        //hur brädet ser ut som i början
+        static int[] StartSticks(int[] newArray)
+        {
+            int sum = 0;
+            foreach (int stick in newArray) //OBS namn är lika v i vet om det
+            {
+                for (int i = 1; i <= stick; i++)
+                {
+                    Console.Write('|');
+                }
+                Console.WriteLine();
+                sum += stick;
+            }
+            return newArray;
+        }
+
+        //håller koll på vems tur det är
+        static void WhosTurn()
+        {
+
+            while (true)
+            {
+                Console.WriteLine("Det är din tur " + (count % 2 == 0 ? spelare1 : spelare2)); // Varannan spelare väljs
+
+                int[] drag = TakeMove();
+
+                if (DoesMoveWork(drag)) // Om draget fungerar
+                {
+
+                    UpdatedSticks(drag); // Ta bort stickor
+                    if (IsEmpty()) // Brädet är helt tomt
+                    {
+                        Console.WriteLine("Du vann! Spelare " + (count % 2 == 0 ? spelare1 : spelare2)); // Den spelare som tog den senaste stickan vinner
+                        
+                        return;
+                        
+                    }
+                    count++;
+                }
+                else
+                {
+                    Console.WriteLine("Ogiltligt drag!!! Försök igen...");
+                }
+            }
+        }
+
+        static int[] TakeMove()
+        {
+            int hög, antal;
+
+            Console.WriteLine("Vilken hög vill du plocka ur och hur många pinnar, skriv med mellanrum emellan!");
+
+            while (true)
+            {
+                string input = Console.ReadLine();
+                string[] inputParts = input.Split(' ');
+
+                if (inputParts.Length == 2 && int.TryParse(inputParts[0], out hög) && int.TryParse(inputParts[1], out antal))
+                {
+                    break; // Avsluta loopen om giltig inmatning ges
+                }
+                else
+                {
+                    Console.WriteLine("Ogiltig inmatning. Försök igen med formatet 'hög antal'.");
+                }
+            }
+
+            return new int[] { hög, antal };
+        }
+
+        static bool DoesMoveWork(int[] drag)
+        {
+            if (drag[1] < 1) return false; //Måste ta minst en sticka
+            if (drag[0] < 1 && drag[0] > 3) return false; //Måste vara hög 1, 2 eller 3.
+            if (stickor[drag[0] - 1] < drag[1]) return false; //Får inte ta fler än vad som finns.
+            return true;
+        }
+
+        static bool IsEmpty()
+        {
+            foreach (int x in stickor) if (x > 0) return false;
+            return true;
+        }
+
+        static void UpdatedSticks(int[] drag)
+        {
+            if (DoesMoveWork(drag)) // Kontrollera om draget är giltigt
+            {
+                int hög = drag[0] - 1;
+                int antal = drag[1];
+
+                stickor[hög] -= antal; // Uppdatera antalet pinnar i den valda högen
+
+                Console.WriteLine("Stickor efter drag:");
+                for (int i = 0; i < stickor.Length; i++)
+                {
+                    Console.Write("Hög " + (i + 1) + ": ");
+                    for (int j = 0; j < stickor[i]; j++)
+                    {
+                        Console.Write("|");
+                    }
+                    Console.WriteLine();
+                }
+            }
+            else
+            {
+                Console.WriteLine("Ogiltligt drag!!! Försök igen...");
+            }
+
+        }
+
+        
+
+
+
+
+
+     
+
+
+    }
+}

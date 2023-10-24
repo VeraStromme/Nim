@@ -6,61 +6,134 @@ using System.Threading.Tasks;
 
 namespace Projektgrupp19_Nim
 {
-    class Program
+     class Program
     {
         //Variabler
         static string spelare1, spelare2;
         static int[] stickor = { 5, 5, 5 };
         static int count = 0;
+        static int vinnare1Count = 0;
+        static int vinnare2Count = 0;
 
         static void Main()
         {
-           
-            GameBoard();
-            Console.WriteLine("Vil du spela igen, ja eller nej?");
-            string input = Console.ReadLine();
-            if (input == "ja")
+            
+            vinnare1Count = 0;
+            vinnare2Count = 0;
+            GameRules(); // Visa spelets regler
+            WhatsYourName(); // Fråga om spelarnas namn
+
+            while (true)
             {
                 GameBoard();
+                Console.WriteLine("Vill du spela igen, ja eller nej?");
+                string input = Console.ReadLine();
+                if (input.ToLower() == "nej")
+                {
+                    
+                    Console.WriteLine("Resultat:");
+                    Console.WriteLine(spelare1 + " vann " + vinnare1Count + " omgångar.");
+                    Console.WriteLine(spelare2 + " vann " + vinnare2Count + " omgångar.");
+                    Console.WriteLine("Tack för att du spelade!");
+                    Console.WriteLine();
+                    ResetGame();
+                    Main();
+                    
+                }
+                else if (input.ToLower() == "ja")
+                {
+                    ResetGame(); // Återställ brädet om spelaren vill spela igen
+                }
+                else
+                {
+                    Console.WriteLine("Ogiltigt svar. Skriv 'ja' eller 'nej'.");
+                }
             }
-            
+
+           
+
+
         }
+
+        static void PrettyGame()
+        {
+            Console.BackgroundColor = ConsoleColor.Gray;
+            Console.Clear();
+            Console.ForegroundColor = ConsoleColor.Magenta;
+        }
+        
+        static void WinnerBoard(string winner)
+        {
+            Console.WriteLine(winner + " vann omgången!");
+            if (winner == spelare1)
+            {
+                vinnare1Count++;
+            }
+            else if (winner == spelare2)
+            {
+                vinnare2Count++;
+            }
+            Console.WriteLine(spelare1 + " = " + vinnare1Count);
+            Console.WriteLine(spelare2 + " = " + vinnare2Count);
+        }
+        
 
         static void GameBoard()
         {
 
-            GameRules(); // Visa spelets regler
-            WhatsYourName(); // Fråga om spelarnas namn
+            
+            Console.WriteLine();
             StartSticks(stickor); // Visa startbrädet
 
-            if(!IsEmpty()) // Loopa tills brädet är tomt
+            while (!IsEmpty()) // Loopa tills brädet är tomt
             {
                 WhosTurn(); // Bestäm vilkens tur det är och hantera deras drag
+                Console.WriteLine();
+                string winner = (count % 2 == 0) ? spelare1 : spelare2;
+                WinnerBoard(winner);
             }
-            else
-                Console.WriteLine("Spelet är över! Spelare " + (count % 2 == 0 ? spelare1 : spelare2) + " vann!");
+            
 
 
 
 
+
+
+
+
+        }
+        static void ResetGame()
+        {
+            for (int i = 0; i < stickor.Length; i++)
+            {
+                stickor[i] = 5; // Återställ brädet
+            }
+            count = 0; // Återställ räknaren
+            
         }
 
         //spelreglerna!
         static bool GameRules()
         {
+            
             Console.WriteLine("Hej och välkommen till NIM! Ifall du vill starta spelet tryck ENTER");
             ConsoleKeyInfo keyInfo = Console.ReadKey();
-
+            PrettyGame();
+            Console.WriteLine();
             if (keyInfo.Key == ConsoleKey.Enter)
             {
-                Console.WriteLine("Spelet har startat! Här kommer lite regler, tryck enter för att få fram nästa regel; ");
+                Console.WriteLine("Spelet har startat! Här kommer lite regler, tryck enter för att få fram nästa regel;");
                 Console.ReadLine();
+                Console.WriteLine();
                 Console.WriteLine("Spelet börjar med att femton stickor delas upp i tre lika stora högar om fem");
                 Console.ReadLine();
-                Console.WriteLine("Därefter turas spelarna om att dra stickor från högarna, du får bara stickor från en hög åt gången. Du måste ta minst en sticka. ");
+                Console.WriteLine();
+                Console.WriteLine("Därefter turas spelarna om att dra stickor från högarna, du får bara stickor från en hög åt gången. Du måste ta minst en sticka.");
                 Console.ReadLine();
-                // en rad om hur man plockar stickor
+                Console.WriteLine("Först skriver du ur vilken hög du vill plocka från (1,2,3)  och sedan hur många pinnar. Du formulerar detta genom att skriva siffror med ett mellanrumm imellan");
+                Console.WriteLine();
                 Console.WriteLine("Spelaren som tar sista stickan vinner! Lycka till!");
+                Console.WriteLine();
                 return true;
             }
             else Console.WriteLine("/n Vi ses en annan gång");
@@ -72,6 +145,7 @@ namespace Projektgrupp19_Nim
         static void WhatsYourName()
         {
 
+            
             Console.WriteLine("1 eller 2 spelare? Skriv '1' eller '2'");
             int.TryParse(Console.ReadLine(), out int total);
 
@@ -82,12 +156,11 @@ namespace Projektgrupp19_Nim
             }
 
 
-
             if (total == 1)
             {
-                Console.WriteLine("Vad är ditt namn spelare ett?");
+                Console.WriteLine("Du kommer nu få köra mot vår AI Gunnar! Vad är ditt namn spelare ett?");
                 spelare1 = Console.ReadLine();
-                spelare2 = "AI";
+                spelare2 = "AI Gunnar";
 
             }
 
@@ -95,6 +168,7 @@ namespace Projektgrupp19_Nim
             {
                 Console.WriteLine("Vad är ditt namn spelare ett?");
                 spelare1 = Console.ReadLine();
+                Console.WriteLine();
                 Console.WriteLine("Vad är ditt namn spelare två?");
                 spelare2 = Console.ReadLine();
             }
@@ -106,8 +180,31 @@ namespace Projektgrupp19_Nim
 
 
         }
+       
+
 
         //hur brädet ser ut som i början
+        static int[] AI()
+        {
+            Random hög = new Random();
+            Random antal = new Random();
+            int[] AIMove = new int[2];
+            while (true)
+            {
+                AIMove[0] = hög.Next(1, 4);
+                AIMove[1] = antal.Next(1, stickor[AIMove[0] - 1] + 1);
+
+                if (DoesMoveWork(AIMove))
+                {
+                    return AIMove;
+                }
+            }
+            
+           
+            
+
+        }
+        
         static int[] StartSticks(int[] newArray)
         {
             int sum = 0;
@@ -126,31 +223,80 @@ namespace Projektgrupp19_Nim
         //håller koll på vems tur det är
         static void WhosTurn()
         {
+           
 
             while (true)
             {
+                Console.WriteLine();
                 Console.WriteLine("Det är din tur " + (count % 2 == 0 ? spelare1 : spelare2)); // Varannan spelare väljs
-
-                int[] drag = TakeMove();
-
-                if (DoesMoveWork(drag)) // Om draget fungerar
+                Console.WriteLine();
+                if (count % 2 != 0)
                 {
-
-                    UpdatedSticks(drag); // Ta bort stickor
-                    if (IsEmpty()) // Brädet är helt tomt
+                    if (spelare2 == "AI Gunnar")
                     {
-                        Console.WriteLine("Du vann! Spelare " + (count % 2 == 0 ? spelare1 : spelare2)); // Den spelare som tog den senaste stickan vinner
-                        
-                        return;
-                        
+                        int[] move = AI();
+                        if (DoesMoveWork(move)) // Om draget fungerar
+                        {
+                            UpdatedSticks(move); // Ta bort stickor
+                            if (IsEmpty()) // Brädet är helt tomt
+                            {
+                                //Console.WriteLine("Du vann! Spelare " + (count % 2 == 0 ? spelare1 : spelare2)); // Den spelare som tog den senaste stickan vinner
+                               
+                                return;
+
+                            }
+                            count++;
+                        }
+                        else
+                        {
+                            AI();
+                        }
+
                     }
-                    count++;
+                    else
+                    {
+                        int[] drag = TakeMove();
+                        if (DoesMoveWork(drag)) // Om draget fungerar
+                        {
+                            UpdatedSticks(drag); // Ta bort stickor
+                            if (IsEmpty()) // Brädet är helt tomt
+                            {
+                                //Console.WriteLine("Du vann! Spelare " + (count % 2 == 0 ? spelare1 : spelare2)); // Den spelare som tog den senaste stickan vinner
+
+                                return;
+
+                            }
+                            count++;
+                        }
+                        else
+                        {
+                            Console.WriteLine("Ogiltligt drag!!! Försök igen...");
+                        }
+                    }
                 }
-                else
+                if (count % 2 == 0)
                 {
-                    Console.WriteLine("Ogiltligt drag!!! Försök igen...");
+                    int[] drag = TakeMove();
+                    if (DoesMoveWork(drag)) // Om draget fungerar
+                    {
+                        UpdatedSticks(drag); // Ta bort stickor
+                        if (IsEmpty()) // Brädet är helt tomt
+                        {
+                            //Console.WriteLine("Du vann! Spelare " + (count % 2 == 0 ? spelare1 : spelare2)); // Den spelare som tog den senaste stickan vinner
+
+                            return;
+
+                        }
+                        count++;
+                    }
+                    else
+                    {
+                        Console.WriteLine("Ogiltligt drag!!! Försök igen...");
+                    }
                 }
             }
+
+            
         }
 
         static int[] TakeMove()
@@ -215,6 +361,19 @@ namespace Projektgrupp19_Nim
             {
                 Console.WriteLine("Ogiltligt drag!!! Försök igen...");
             }
+
+        }
+
+        
+
+
+
+
+
+     
+
+
+    }
 
         }
 
